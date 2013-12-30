@@ -1,0 +1,211 @@
+<html>
+<head>
+  <title>Fieldtrip GB OpenStack Sample</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <script src="../js/openlayers/OpenLayers.js"></script> 
+<script src="../js/coordomatic.js"></script> 
+  
+<!--  
+  <script type="text/javascript" src="../js/proj4js-compressed.js"></script>
+  <script type="text/javascript">
+      Proj4js.defs["EPSG:27700"] = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs";
+      </script>
+ -->
+ 
+ 
+ <style type="text/css">
+         html, body, #map {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                padding: 0% 0% 1% 1%;
+         }
+
+            #text {
+                position: absolute;
+                bottom: 1em;
+                left: 1em;
+                width: 512px;
+                z-index: 20000;
+                background-color: white;
+                padding: 0 0.5em 0.5em 0.5em;
+            }
+
+            
+
+    </style>   
+
+
+
+    </head>
+    <body>
+
+ <h1>WebView</h1>
+    <div class="map" id="map"></div>
+
+
+<script defer="defer" type="text/javascript">
+
+
+
+
+function testIt()
+{
+   	  var latlontx = document.getElementById("latlon") ;
+       latlontx.value = "connecting" ;
+
+}
+
+
+function convertBNG(latlon)
+{
+     var natgrid =  new Edina.EPSG_27700() ;
+var coords = natgrid.toLocalSystem( latlon.lat, latlon.lon );
+     // latlon.lat =  coords[0] ;
+     // latlon.lon = coords[1] ;
+	 return coords ;
+
+}
+
+function getLocation() {
+        
+       var latlon = {"lat":55.9 , "lon":-3.4 } ;
+        try
+		{
+             Android.showToast("calling Android.getLocation()") ;
+        	  latlon = JSON.parse(Android.getLocation());
+                
+   	   	}
+		catch(e)
+           { 
+            // Portobello 55.9527° N, 3.1143° W
+
+             latlon = {"lat":55.9527 , "lon":-3.1143 } ;
+
+           }        
+         var coords = convertBNG(new OpenLayers.LonLat(latlon.lon, latlon.lat)) ;
+
+        // Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
+        
+        var lonlat = new OpenLayers.LonLat(327956, 672591) ;
+ 	   lonlat.lon = coords[1] ;
+	   lonlat.lat = coords[0] ;
+       
+      
+        map.panTo(lonlat,10) ;
+        map.setCenter(lonlat, 10) ;
+      
+
+    }
+
+
+
+/**
+* Map with local storage caching.
+* @params options:
+*     serviceVersion - TMS service version
+*     layerName      - TMS layer name
+*     type           - layer type
+*     isBaseLayer    - is this the base layer?
+*     name         - map name
+*     url            - TMS URL
+*     opacity        - overlay transparency
+*/
+
+ 
+   
+  var MapWithLocalStorage = OpenLayers.Class(OpenLayers.Layer.TMS, {
+  
+  initialize: function(options) {
+
+       this.serviceVersion = options.serviceVersion;
+       this.layername = options.layerName;
+       this.type = options.type;
+
+       this.async = true;
+
+       this.isBaseLayer = options.isBaseLayer;
+
+       if(options.opacity){
+           this.opacity = options.opacity;
+       }
+
+       OpenLayers.Layer.TMS.prototype.initialize.apply(this, [options.name,
+                                                              options.url,
+                                                              {}]
+                                                      );
+   },
+   
+   getURLasync: function(bounds, callback, scope) {
+       var urlData = this.getUrlWithXYZ(bounds);
+ 
+
+
+  var pathname = window.location.pathname ;
+  var n=pathname.lastIndexOf("openstackSample2.html");
+  var cachepath = pathname.substring(0,n) ;
+  callback.call(scope, cachepath + "../cache5/" + urlData.z + "_" + urlData.x + "_" + urlData.y + "." + this.type  );
+
+       
+   },
+   getUrlWithXYZ: function(bounds){
+          bounds = this.adjustBounds(bounds);
+       var res = this.map.getResolution();
+       var x = Math.round((bounds.left - this.tileOrigin.lon) / (res * this.tileSize.w));
+       var y = Math.round((bounds.bottom - this.tileOrigin.lat) / (res * this.tileSize.h));
+       var z = this.serverResolutions != null ?
+           OpenLayers.Util.indexOf(this.serverResolutions, res) :
+           this.map.getZoom() + this.zoomOffset;
+
+       //inverty for openstreetmap rather than google style TMS
+      // var ymax = 1 << z;
+      // var y = ymax - y -1;
+       var path = this.serviceVersion + "/" + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type;
+
+       var url = this.url;
+       if (OpenLayers.Util.isArray(url)) {
+           url = this.selectUrl(path, url);
+       }
+       return { url: url + path, x:x, y:y, z:z};
+
+   },
+   getURL: function(bounds) {
+       return "file:///./cache5/" ;
+   },
+});
+
+
+
+	var bounds = new OpenLayers.Bounds(323833,670920,331903,675655);
+
+
+	var map = new OpenLayers.Map('map',  {controls: [], projection: new OpenLayers.Projection("EPSG:27700"), units: "m", maxExtent: bounds, resolutions: [1024,512,256,128,64,32,16,8,4,2,1]
+  }
+);
+
+
+	
+
+   
+
+	map.addControl(new OpenLayers.Control.Navigation());
+//	map.addControl(new OpenLayers.Control.LayerSwitcher());
+//	map.addControl(new OpenLayers.Control.PanZoomBar());
+//	map.addControl(new OpenLayers.Control.Scale());
+
+
+ var fieldtripgb_stack = new MapWithLocalStorage(  { layerName:"fieldtripgb", isBaseLayer:true, serviceVersion:"1.0.0", name:"tms" , url:"http://fieldtripgb.edina.ac.uk/", type: "png"}); 
+
+ map.addLayers([fieldtripgb_stack]);
+
+ var edinburgh_bounds = new OpenLayers.Bounds (324472,673054,326048,673881);
+    map.zoomToExtent(edinburgh_bounds);
+
+    getLocation() ;
+
+      </script>
+
+</body>
+</html>

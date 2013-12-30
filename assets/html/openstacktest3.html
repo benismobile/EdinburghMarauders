@@ -1,0 +1,586 @@
+<html>
+<head>
+  <title>GPX Tracker  Demonstrator</title>
+
+    <script src="http://openlayers.org/api/OpenLayers.js"></script>
+
+    <script type="text/javascript" src="http://fieldtripgb.edina.ac.uk/authoring/js/proj4js-compressed.js"></script>
+
+  <script type="text/javascript">
+    Proj4js.defs["EPSG:27700"] = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs";
+  </script>
+
+ <style type="text/css">
+        body {
+            font-family: sans-serif;
+        }
+        p {
+            width: 95%;
+        }
+        a {
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        div.map{
+        padding: 20 20 20 20;
+        float: left;
+
+        }
+        div.docs{
+        float: left;
+        width: 15%;
+		padding: 10 10 10 10;
+        }
+
+    </style>
+
+    </head>
+    <body>
+
+	<div>
+	<p><b> GPX tracker - demonstrator</b></p>
+
+
+      <div class="map" id="map" style="width:75%; height:90%"></div>
+      <script defer="defer" type="text/javascript">
+
+
+
+
+function WalkAnimation(walk){
+
+  this.walk = walk ;
+  var isPlaying = false ;
+  var startTime = new Date() ;
+  var lastReplayTime = null ;
+  var counter = 0 ;
+  
+  // left and right feet markers
+  var size = new OpenLayers.Size(45,41);  // TODO pass these into constructor params? 
+//  var offsetR = new OpenLayers.Pixel(-(size.w)+ (size.w/4)  , -size.h + (size.w/4) );
+//  var offsetL = new OpenLayers.Pixel(-(size.w) + (size.w/2), -size.h + (size.w/2) );
+  var offset = new OpenLayers.Pixel( -61 - 23 , -61 - 21) ; // TODO hyoteneuse width, height 
+  var rf = new OpenLayers.Icon('http://dlib-brown.edina.ac.uk/icons/right_footprint180.png', size, offset );
+  var lf = new OpenLayers.Icon('http://dlib-brown.edina.ac.uk/icons/left_footprint180.png', size, offset );
+
+  /*
+  *  This is callback function the browser will invoke every time it refreshes page
+  *  driving our animation. Check out HTML5 requestFrame for detail
+  *  TODO: shim for non compliant browsers
+  *
+  */
+
+  WalkAnimation.prototype.anim = function(){
+    
+      OpenLayers.Animation.requestFrame(WalkAnimation.prototype.anim) ;
+
+      if(isPlaying){
+         console.log("play animation invoked");
+             
+
+           var currentTime = new Date() ;
+           var replayTime =  Math.round(currentTime - startTime) ;        
+           var intervalTime = replayTime - lastReplayTime ;
+           // we will make a new footprint at roughly every stepInterval seconds
+           var stepInterval = Math.round(this.walk.journeyTime / this.walk.numSteps) ;
+           var markers = this.walk.markerLayer ;
+           var gpxlayer = this.walk.gpxLayer ;
+
+             var remainingIntervalQuotiant =  (stepInterval - intervalTime) / stepInterval  ;
+             console.log("remainingIntervalQuotiant: " + remainingIntervalQuotiant ) ;
+          
+
+           /*
+           * we want to make a new footprint at roughly every stepInterval seconds
+           * so code below is called once for each point in walk
+           * we work out bearing to next point and create a canvas which we rotate 
+           * in subsequent frames. Interval time is how much time we ran since last
+           * footstep created.
+           */
+           
+           if(intervalTime > stepInterval)
+             {
+   
+                 
+                  lastReplayTime = replayTime ; 
+                  counter++ ;
+                  remainingIntervalQuotiant = 0.999 ;  // reset as might be negative
+                  // if we got to end of walk clear marker layer of any trailing
+                  if(counter >= this.walk.numSteps -1 )
+                  {  
+                     counter = 0 ;
+                     for(var i = 1 ; i < numPoints -1 ; i++ )
+                     {
+                       markers.removeMarker(gpxlayer.features[0].geometry.components[i].marker);
+                  
+                     }
+                  }
+
+                 ;   
+
+                 var lat = gpxlayer.features[0].geometry.components[counter].y ;
+                 var lon = gpxlayer.features[0].geometry.components[counter].x ;
+                 var icon = null ;
+                 if(counter > 0 )
+                 {
+                     // get bearing to next point 
+                     var p1X = gpxlayer.features[0].geometry.components[counter].x ; 
+                     var p1Y = gpxlayer.features[0].geometry.components[counter].y ; 
+                     // TODO does below break at upper boundary?
+                     var p2X = gpxlayer.features[0].geometry.components[counter+1].x ;
+                     var p2Y = gpxlayer.features[0].geometry.components[counter+1].y ;  
+                     var bearing = calcAngle((p2Y - p1Y), (p2X - p1X)) ;
+                   
+                     // create footstep maker and add to makers layer   
+                     icon = counter % 2 == 1 ? rf  : lf ; // left foot or right foot?
+                             
+                     var marker = new OpenLayers.Marker(new OpenLayers.LonLat(lon,lat),icon.clone()); 
+                     this.walk.markersLayer.addMarker(marker);   
+                     var markerDiv = marker.icon.imageDiv ;
+                     // make original img element invisible
+                     var markerImg = markerDiv.firstChild ;
+                
+                     // replace image with canvas large enough so we can rotate it in later frames by bearing
+                     markerImg.style.display = "none" ;                
+                     var markerCanvas = document.createElement("canvas");
+                     markerDiv.appendChild(markerCanvas) ;
+                     markerCanvas.width = (2 * 61) ; // TODO  2 * hypoteneuse img width , height  ;
+                     markerCanvas.height = (2 * 61) ;               
+                     var c = markerCanvas.getContext("2d") ;
+                   
+              
+                          
+                    // cache calculations and object for new footprint in the current Point so we can access them in step interval animation frames
+                     gpxlayer.features[0].geometry.components[counter].marker = marker ;  
+                     gpxlayer.features[0].geometry.components[counter].bearing = bearing ;
+                     gpxlayer.features[0].geometry.components[counter].markerCanvas = markerCanvas ;
+                     gpxlayer.features[0].geometry.components[counter].markerImg = markerImg ;
+                    
+
+                      //remove trailing footstep markers
+                     var removeMarker = null ;                        
+                  
+                      if(counter > 0) // TODO make trail length configurable
+                      {         
+                        removeMarker = gpxlayer.features[0].geometry.components[counter-1].marker ;	
+		        this.walk.markersLayer.removeMarker(removeMarker) ;                       
+		      }
+
+
+              } // ( if counter > 0)
+ 
+               // reset intervalTime   
+               intervalTime = 0 ;  
+            
+        
+             } // ends if(intervalTime > stepInterval)
+
+             // this section runs code for each requestFrame
+             if(counter > 0 )
+             {
+                var imgheight = 41 ;
+                var ctx = gpxlayer.features[0].geometry.components[counter].markerCanvas.getContext("2d") ;
+                var markerImg =  gpxlayer.features[0].geometry.components[counter].markerImg ;
+                var bearing = gpxlayer.features[0].geometry.components[counter].bearing + Math.PI ; // add 180 because for image is upside down meaning heel of foot gets drawn first using html5 canvas drawImage()
+                drawImageRotate(ctx, markerImg, 61, 61, 45, imgheight, remainingIntervalQuotiant,  bearing ) ;
+              }
+
+      } // ends if(playing)
+
+  }; // ends callback function anim()
+
+  WalkAnimation.prototype.play = function(){
+     
+      isPlaying = true ;
+      startTime = new Date() ;
+      
+    
+  };
+
+  WalkAnimation.prototype.pause = function(){
+  
+     isPlaying = false ;
+    
+  };
+  
+  function drawImageRotate(c, img, x, y, width, height, remainingIntervalQuotiant, angle){
+    
+     // we want foot drawn fully in half the interval time
+     if (remainingIntervalQuotiant < 0) {remainingIntervalQuotiant = 0 ; } 
+     var proportionLeftToDraw = (1 - remainingIntervalQuotiant) * 2 ;
+     if(proportionLeftToDraw > 1 ) { proportionLeftToDraw = 1 ; }
+     var adjustedheight = Math.round(height * (proportionLeftToDraw) ) ;
+     // TODO can we avoid recalcualting angle if not different from last frame?
+      c.translate(x + width / 2, y + height /2 ) ;
+      c.rotate(angle) ;
+      c.clearRect(width / 2 * (-1), height / 2 * (-1), width , adjustedheight) ;
+      c.drawImage(img, width / 2 * (-1), height / 2 * (-1), width , adjustedheight) ;
+ 
+      c.rotate(angle * (-1) ) ;
+      c.translate((x + width /2) * (-1) , (y + height /2) * (-1)) ;
+
+
+  }; 
+
+  function calcNextPoint( p, distance, angle){
+
+             var nextPoint = new OpenLayers.Geometry.Point(0,0) ;
+             // TO DO is this necessary? 
+             if(angle == 90) 
+             {
+                nextPoint.x = p.x + distance ;
+                nextPoint.y = p.y ;
+                return nextPoint ;
+             } 
+             if(angle == 180)
+             {
+		nextPoint.x = p.x ;
+                nextPoint.y = p.y - distance ;
+                return nextPoint ;				 
+
+             }
+             if(angle == 270)
+             {
+                nextPoint.x = p.x - distance ;
+                nextPoint.y = p.y ;
+                return nextPoint ;		
+             }
+             
+             if(angle == 360 || angle == 0 )
+             {
+		nextPoint.x = p.x ;
+                nextPoint.y = p.y + distance ;				 
+                return nextPoint ;
+             } 
+
+             var rightAngle = 0 ;
+             var signX = -1 ;
+             var signY = -1 ;
+             // TODO is this necessary ? Probably not.
+             if(angle > 0 && angle < 90)
+             {
+		rightAngle = 90 - angle ; // get right triangle angle
+                signX = 1 ;
+                signY = 1 ; 	     
+             }
+             else if(angle > 90 && angle  < 180)
+             {
+		rightAngle = 90 - ( 180 - angle) ;
+                signX =1 ;
+                signY = -1 ;		       
+             }   
+             else if(angle > 180 && angle < 270)
+             {
+		rightAngle = 90 - (270 - angle) ;
+                signX = -1 ;
+                signY = -1 ;			    
+             }
+             else if ( angle > 270 && angle < 360) 
+	     {
+                rightAngle = 90 - ( 360 - angle) ;
+                signX = -1 ;
+                signY = 1 ;
+             }           
+             angleRad =  rightAngle * Math.PI / 180;                     
+             var deltax = Math.sin(angleRad) * distance ;
+             var deltay = Math.cos(angleRad) * distance ;
+             nextPoint.x = p.x + (deltax *signX) ;
+             nextPoint.y = p.y + (deltay * signY) ;
+             return nextPoint ; 
+         } ;
+      
+     function calcCartesianDistance(p1, p2) 
+         {
+             var deltaX = p2.x - p1.x ;
+	     var deltaY = p2.y - p1.y ;
+             return Math.sqrt(Math.pow(deltaX,2), Math.pow(deltaY,2)) ;	 		      
+
+         };
+
+         
+     function calcAngle(deltaY, deltaX)
+         {
+            var angle = Math.atan2(deltaY, deltaX) ;
+            if (angle < 0) // convert angle from atan function to 0..2PI angle
+            {
+               angle = Math.abs(angle) +  (Math.PI/2);
+            }
+            else
+            {   
+               angle = 2*Math.PI - (angle - (Math.PI / 2));
+            }
+                 
+            return angle ;
+         } ;
+    
+     
+
+
+  // call anim function everytime that the browser page refreshes
+  // the anim function will only actually do something after play function
+  // called and isPlaying flag set    
+  OpenLayers.Animation.requestFrame(WalkAnimation.prototype.anim) ;
+
+};
+
+/**
+*
+* Class for handling the name and details and marker 
+* for a person taking part in a walk
+* Instance should be passed into contructor for a Walk object
+*
+*/
+
+
+function Walker(name, badge){
+
+ this.speed = 0.1 ;
+ this.name = name ;
+ this.badge = badge ;
+
+};
+
+
+/*
+*
+* Class to encapsulate a OpenLayers Vector layer showing a GPX route. 
+* Consists of the VectorLayer which is passed to constructor. 
+* The Vector Layer  must use the  OpenLayers.Format.GPXExt format to ensure the time element in the GPX is captured. 
+* Also has a WalkAnimation object which handles the time-driven footstep visualisation and a Walker which represents the 
+* subject of the walk.
+* 
+*/
+
+function Walk(name, map, walker)
+{
+  this.name = name ;
+  this.map = map ;
+  this.walker = walker ;
+  this.numSteps = 0 ;
+  this.journeyTime = 0 ;
+  this.markersLayer = null ;  
+  this.gpxLayer = null ;
+  this.tmsLayer = null ;
+
+  for( var i = 0 ; i < map.layers.length ; i++)
+  { 
+
+      var layer = map.layers[i] ;
+      if (layer instanceof OpenLayers.Layer.Markers)
+      {
+            this.markersLayer = layer ;
+      } 
+      if(layer instanceof OpenLayers.Layer.Vector)
+      {
+             
+            this.gpxLayer = layer ;
+            // regsiter "loadend" event on gpxLayer as we have to wait for the layer to load before we can instantiate Walk properties and kick off the animation
+	    this.gpxLayer.events.register("loadend", this,  function() {
+    
+                           
+                var extent = this.gpxLayer.getDataExtent() ;
+                this.map.zoomToExtent(extent);
+                
+                var numPoints = this.gpxLayer.features[0].geometry.components.length ;
+	        // initiate Walk.numSteps
+                this.numSteps = numPoints ;
+	      
+                 var firstPointTimeText =  this.gpxLayer.features[0].geometry.components[0].time ;
+	        var firstPointTime =  new Date(Date.parse(firstPointTimeText));
+	        var lastPointTimeText = this.gpxLayer.features[0].geometry.components[numPoints-1].time ;
+	        var lastPointTime = new Date(Date.parse(lastPointTimeText));
+              
+                // initiate Walk.journeyTime
+	        this.journeyTime = (lastPointTime - firstPointTime) * this.walker.speed  ;
+	      
+                // animation is passed copy of Walk object 
+                var animation = new WalkAnimation(this) ;
+                animation.play() ;
+                           
+                           
+
+              });            
+
+
+         }
+         if(layer instanceof OpenLayers.Layer.TMS)
+         {
+              this.tmsLayer = layer ;
+      
+         }
+
+
+      } // ends for( var i = 0 ; i < map.layers.length ; i++)
+
+} ;
+
+   
+      
+/*
+* Extend OpenLayers.Format.GPX to read <ele> and <time> 
+* properties of <trkpt> in addition to the lon and lat attributes
+*
+*
+*/
+
+OpenLayers.Format.GPXExt = OpenLayers.Class(OpenLayers.Format.GPX, {
+
+ read: function(doc) {
+        if (typeof doc == "string") {
+            doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
+        }
+        var features = [];
+
+        if(this.extractTracks) {
+            var tracks = doc.getElementsByTagName("trk");
+            for (var i=0, len=tracks.length; i<len; i++) 
+            {
+                // Attributes are only in trk nodes
+                var attrs = {};
+                if(this.extractAttributes) {
+                    attrs = this.parseAttributes(tracks[i]);
+                }
+
+                var segs = this.getElementsByTagNameNS(tracks[i], tracks[i].namespaceURI, "trkseg");
+                for ( var j = 0, seglen = segs.length; j < seglen; j++ ) {
+                    // We don't yet support extraction of trkpt attributes
+                    // All trksegs of a trk get that trk's attributes
+                   var track = this.extractSegment(segs[j], "trkpt");
+                    features.push(new OpenLayers.Feature.Vector(track, attrs));
+		 
+
+                }
+            }
+        }
+    if(this.extractRoutes) {
+            var routes = doc.getElementsByTagName("rte");
+            for (var k=0, klen=routes.length; k<klen; k++) {
+                var attrs = {};
+                if(this.extractAttributes) {
+                    attrs = this.parseAttributes(routes[k]);
+                }
+                var route = this.extractSegment(routes[k], "rtept");
+                features.push(new OpenLayers.Feature.Vector(route, attrs));
+            }
+        }
+
+        if(this.extractWaypoints) {
+            var waypoints = doc.getElementsByTagName("wpt");
+            for (var l = 0, len = waypoints.length; l < len; l++) {
+                var attrs = {};
+                if(this.extractAttributes) {
+                    attrs = this.parseAttributes(waypoints[l]);
+                }
+                var wpt = new OpenLayers.Geometry.Point(waypoints[l].getAttribute("lon"), waypoints[l].getAttribute("lat"));
+                features.push(new OpenLayers.Feature.Vector(wpt, attrs));
+            }
+        }
+
+        if (this.internalProjection && this.externalProjection) {
+            for (var g = 0, featLength = features.length; g < featLength; g++) {
+                features[g].geometry.transform(this.externalProjection,
+                                    this.internalProjection);
+            }
+        }
+
+        return features;
+    },
+
+  extractSegment: function(segment, segmentType) {
+        var points = this.getElementsByTagNameNS(segment, segment.namespaceURI, segmentType);
+        var point_features = [];
+        var attributes = {} ;
+        for (var i = 0, len = points.length; i < len; i++) {
+    
+      var point = new OpenLayers.Geometry.Point(points[i].getAttribute("lon"), points[i].getAttribute("lat")) ;     
+
+	    point.ele = points[i].childNodes[0].textContent ;
+            point.time = points[i].childNodes[1].textContent ;					 
+            point_features.push(point);
+
+    
+
+        }
+        return new OpenLayers.Geometry.LineString(point_features);
+    },
+
+
+CLASS_NAME: "OpenLayers.Format.GPXExt" 
+});
+
+
+      
+
+
+	var bounds = new OpenLayers.Bounds (0, 0, 700000, 1300000);
+
+
+	var map = new OpenLayers.Map('map',  {controls: [], projection: new OpenLayers.Projection("EPSG:27700"), units: "m", maxExtent: bounds, resolutions: [1024,512,256,128,64,32,16,8,4,2,1]});
+
+
+var proj = new OpenLayers.Projection("EPSG:4326") ; 
+	
+
+var fieldtripgb_stack = new OpenLayers.Layer.TMS("fieldtrip", "http://dlib-brown.edina.ac.uk/mapcache/tms", { layername: "fieldtripgb@BNG", type: "png", serverResolutions:[1024,512,256,128,64,32,16,8,4,2,1]
+}); 
+
+
+	map.addControl(new OpenLayers.Control.Navigation());
+	map.addControl(new OpenLayers.Control.LayerSwitcher());
+	map.addControl(new OpenLayers.Control.PanZoomBar());
+//	map.addControl(new OpenLayers.Control.Scale());
+//	map.addControl(new OpenLayers.Control.MousePosition());
+
+      fieldtripgb_stack.setOpacity(1) ;
+
+     var gpxFormat = new OpenLayers.Format.GPXExt();
+    
+
+      // create layer with the GPX track
+     gpxlayer = new OpenLayers.Layer.Vector("gpx", {
+         strategies: [new OpenLayers.Strategy.Fixed()],
+         protocol: new OpenLayers.Protocol.HTTP({
+             url: 'http://dlib-brown.edina.ac.uk/benwalk.gpx',
+             format: gpxFormat
+         }),
+         style: {
+             strokeColor: 'red',
+             strokeWidth: 5,
+             strokeOpacity: 1
+         },
+         projection: proj
+     });
+
+        
+       map.addLayers([fieldtripgb_stack, gpxlayer]);
+
+       gpxlayer.setVisibility(true) ;
+       fieldtripgb_stack.setVisibility(true) ;
+
+
+       map.zoomToMaxExtent();
+
+     var markers = new OpenLayers.Layer.Markers( "Markers" );
+     map.addLayer(markers);
+
+      var namebadgeSize = new OpenLayers.Size(230,53) ;
+      var namebadgeOffset = new OpenLayers.Pixel(-8,-8) ;
+      var namebadgeIcon =  new OpenLayers.Icon('http://dlib-brown.edina.ac.uk/icons/benbutchart.png', namebadgeSize, namebadgeOffset);
+
+     // Walk constructor will register gpxLayer "loadend" event which kicks off the animation
+      var walk = new Walk("Bens Walk", map, new Walker("Ben Butchart",namebadgeIcon)) ;
+        
+
+
+     
+
+    
+
+
+      </script>
+
+</body>
+</html>

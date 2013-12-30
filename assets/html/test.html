@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN"
+    "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
+<html>
+<head>
+  <title>GPX Tracker  Demonstrator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<script src="../js/openlayers/OpenLayers.js"></script>
+ <style type="text/css">
+         html, body, #map {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                padding: 0% 0% 5% 5%;
+         }
+
+            #text {
+                position: absolute;
+                bottom: 1em;
+                left: 1em;
+                width: 512px;
+                z-index: 20000;
+                background-color: white;
+                padding: 0 0.5em 0.5em 0.5em;
+            }
+
+            
+
+    </style>
+
+</head>
+
+<body>
+
+
+<img src="file:///C:/android_asset/img/1315.png"/>
+
+
+  <div class="map" id="map" style="width:75%; height:90%"></div>
+
+ <script  defer="defer" type="text/javascript">
+
+	
+
+
+
+/**
+* Map with local storage caching.
+* @params options:
+*     serviceVersion - TMS service version
+*     layerName      - TMS layer name
+*     type           - layer type
+*     isBaseLayer    - is this the base layer?
+*     name         - map name
+*     url            - TMS URL
+*     opacity        - overlay transparency
+*/
+var MapWithLocalStorage = OpenLayers.Class(OpenLayers.Layer.TMS, {
+   initialize: function(options) {
+
+       this.serviceVersion = options.serviceVersion;
+       this.layername = options.layername;
+       this.type = options.type;
+
+       this.async = true;
+
+       this.isBaseLayer = options.isBaseLayer;
+
+       if(options.opacity){
+           this.opacity = options.opacity;
+       }
+
+       OpenLayers.Layer.TMS.prototype.initialize.apply(this, [options.name,  options.url,  {}] );
+   },
+
+   getURLasync: function(bounds, callback, scope) {
+
+      callback.call(scope,"file:///C:/android_asset/img/1315.png");
+
+   },       
+
+   getURL: function(bounds) {
+//       return OpenLayers.Layer.XYZ.prototype.getURL.apply(this, [bounds]);
+
+var url = "file:///android_asset/img/" ;
+return url ;
+
+   },
+});
+
+
+
+    var bounds = new OpenLayers.Bounds (0, 0, 700000, 1300000);
+var edinburgh_bounds = new OpenLayers.Bounds (324472,673054,326048,673881);
+
+
+
+var map = new OpenLayers.Map('map',  {controls: [],  projection: new OpenLayers.Projection("EPSG:27700"), units: "m", maxExtent: edinburgh_bounds, resolutions: [1024,512,256,128,64,32,16,8,4,2]});
+
+
+// var tms = new OpenLayers.Layer.TMS("tms",  "http://fieldtripgb.edina.ac.uk/mapcache/tms", { layername: "fieldtripgb@BNG", type: "png", isBaseLayer: true,  serverResolutions:[1024,512,256,128,64,32,16,8,4,2]}) ;
+
+var tms = new MapWithLocalStorage( { name:"tms", url:"file:///C:/android_asset/img", layername:"tmslayer", type:"png",serviceVersion:"1.0.0", isBaseLayer:true,  serverResolutions:[1024,512,256,128,64,32,16,8,4,2]} ) ;
+
+
+tms.setVisibility(true) ;
+     // map.addControl(new OpenLayers.Control.Navigation());
+     // map.addControl(new OpenLayers.Control.LayerSwitcher());
+     // map.addControl(new OpenLayers.Control.PanZoomBar());
+
+
+map.addLayers([tms]);
+    map.zoomToExtent(edinburgh_bounds);
+
+
+</script>    
+   
+</body>
+
+</html>
