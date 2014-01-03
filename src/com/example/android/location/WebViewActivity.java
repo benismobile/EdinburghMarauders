@@ -27,12 +27,12 @@ import android.content.SharedPreferences;
 import android.content.Context;
 
 
- 
+
 
 public class WebViewActivity extends ActionBarActivity
 implements LocationListener,
    GooglePlayServicesClient.ConnectionCallbacks,
-   GooglePlayServicesClient.OnConnectionFailedListener  	   
+   GooglePlayServicesClient.OnConnectionFailedListener
 
 
 {
@@ -49,7 +49,7 @@ SharedPreferences.Editor mEditor;
 @SuppressLint("NewApi")
 @Override
 protected void onCreate(Bundle savedInstanceState) {
-       
+
 super.onCreate(savedInstanceState);
 
  // Make sure we're running on Honeycomb or higher to use ActionBar APIs
@@ -58,8 +58,8 @@ super.onCreate(savedInstanceState);
             getActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
- 
- 
+
+
  webview = new WebView(this);
  setContentView(webview);
 
@@ -74,7 +74,7 @@ super.onCreate(savedInstanceState);
 
  webSettings.setLoadsImagesAutomatically (true) ;
 
-// WHATEVER YOU DO: DONT USE setAllowFileAccess* ON GINGERBREAB - Causes nasty crach 
+// WHATEVER YOU DO: DONT USE setAllowFileAccess* ON GINGERBREAB - Causes nasty crach
 // BUT needed to get the local gpx loading to work
 // webSettings.setAllowFileAccess(true) ;
 // webSettings.setAllowFileAccessFromFileURLs(true) ;
@@ -101,6 +101,9 @@ mLocationRequest = LocationRequest.create();
 
         // Get an editor
         mEditor = mPrefs.edit();
+        mUpdatesRequested = true ;
+        mEditor.putBoolean(LocationUtils.KEY_UPDATES_REQUESTED, mUpdatesRequested);
+        mEditor.commit();
 
 } // ends onCreate
 
@@ -110,7 +113,7 @@ mLocationRequest = LocationRequest.create();
 public void onStop() {
 
 // If the client is connected
-  if (mLocationClient.isConnected()) 
+  if (mLocationClient.isConnected())
   {
             stopPeriodicUpdates();
   }
@@ -141,22 +144,23 @@ public void onStop() {
 
         /*
          * Connect the client. Don't re-start any requests here;
-         * instead, wait for onResume()
+         * instead, wait for onConnected() callback
          */
         mLocationClient.connect();
 
 }
 
 @Override
-public void onResume() 
+public void onResume()
 {
 
         super.onResume();
 
         // If the app already has a setting for getting location updates, get it
         if (mPrefs.contains(LocationUtils.KEY_UPDATES_REQUESTED)) {
+        {
             mUpdatesRequested = mPrefs.getBoolean(LocationUtils.KEY_UPDATES_REQUESTED, false);
-
+        }
         // Otherwise, turn off location updates until requested
         } else {
             mEditor.putBoolean(LocationUtils.KEY_UPDATES_REQUESTED, false);
@@ -197,9 +201,10 @@ public boolean onOptionsItemSelected(MenuItem item) {
 
 public void getLocation()
 {
- 
+
+Toast.makeText(this,"Android.getLocation called",Toast.LENGTH_SHORT).show();
 webview.loadUrl("javascript:getLocation();");
- 
+
 }
 
 
@@ -221,9 +226,9 @@ webview.loadUrl("javascript:getLocation();");
     }
 
 
-   
 
-   
+
+
     private void startPeriodicUpdates() {
 
         mLocationClient.requestLocationUpdates(mLocationRequest, this);
@@ -237,16 +242,20 @@ webview.loadUrl("javascript:getLocation();");
     @Override
     public void onLocationChanged(Location location) {
 
-Toast.makeText(this,"Android.onLocationChanged called",Toast.LENGTH_SHORT).show();
+ Toast.makeText(this,"Android.onLocationChanged",Toast.LENGTH_SHORT).show();
 
+// webview.loadUrl("javascript:onLocationUpdate();");
 
 
 	 // Display the current location in the UI
-         String latlon = LocationUtils.getLatLngJSON(this, location);
+       String latlon = LocationUtils.getLatLngJSON(this, location);
 
-    	 
-// TODO call javascript method to update location
-	
+
+
+     // call javascript method to update location
+  webview.loadUrl("javascript:onLocationUpdateP('" + latlon +"');");
+
+
     }
 
 
@@ -256,7 +265,7 @@ private boolean servicesConnected() {
         int resultCode =              GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
 
         // If Google Play services is available
-        if (ConnectionResult.SUCCESS == resultCode) 
+        if (ConnectionResult.SUCCESS == resultCode)
 	   {
 
             // Continue
@@ -271,15 +280,17 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
 }
 
     @Override
-    public void onConnected(Bundle dataBundle) 
+    public void onConnected(Bundle dataBundle)
     {
-	Toast.makeText(this, "On Connected",Toast.LENGTH_SHORT).show();
-
-
+	    Toast.makeText(this, "On Connected: " + mUpdatesRequested,Toast.LENGTH_SHORT).show();
+       if(mUpdatesRequested)
+      {
+        startPeriodicUpdates() ;
+      }
     }
 
     @Override
-    public void onDisconnected() 
+    public void onDisconnected()
     {
 	Toast.makeText(this, "On Disconnected",Toast.LENGTH_SHORT).show();
 

@@ -43,11 +43,15 @@
     <body>
 
  <h1>WebView</h1>
+  <div class="info" id="infopanel">
+      <input id="locationupdate" type="text"/>
+
+    </div>
+
     <div class="map" id="map"></div>
 
 
 <script defer="defer" type="text/javascript">
-
 
 
 
@@ -69,12 +73,40 @@ var coords = natgrid.toLocalSystem( latlon.lat, latlon.lon );
 
 }
 
+
+function onLocationUpdate()
+{
+
+  Android.showToast("JS:onLocationUpdate no param") ;
+}
+
+function onLocationUpdateP(latlon)
+{
+
+Android.showToast("JS:onLocationUpdate with param: " + latlon);
+
+
+	var locationupdate = document.getElementById("locationupdate") ;
+
+ locationupdate.value = latlon ;    
+
+  // locationupdate.value = latlon.lat + ",  " + latlon.lon ;     
+
+
+	// convertBNG(latlon) ;
+     
+ 
+}
+
+
+
+
 function getLocation() {
         
        var latlon = {"lat":55.9 , "lon":-3.4 } ;
         try
 		{
-             Android.showToast("calling Android.getLocation()") ;
+             Android.showToast("calling getLocation() from JS") ;
         	  latlon = JSON.parse(Android.getLocation());
                 
    	   	}
@@ -83,11 +115,13 @@ function getLocation() {
             // Portobello 55.9527° N, 3.1143° W
 
              latlon = {"lat":55.9527 , "lon":-3.1143 } ;
+		    Android.showToast("Using default location") ;  
+        	
 
            }        
          var coords = convertBNG(new OpenLayers.LonLat(latlon.lon, latlon.lat)) ;
 
-        // Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
+         Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
         
         var lonlat = new OpenLayers.LonLat(327956, 672591) ;
  	   lonlat.lon = coords[1] ;
@@ -97,6 +131,9 @@ function getLocation() {
         map.panTo(lonlat,10) ;
         map.setCenter(lonlat, 10) ;
       
+     var locationupdate = document.getElementById("locationupdate") ;
+     locationupdate.value = latlon.lat + ",  " + latlon.lon ;     
+
 
     }
 
@@ -203,7 +240,7 @@ function getLocation() {
  var edinburgh_bounds = new OpenLayers.Bounds (324472,673054,326048,673881);
     map.zoomToExtent(edinburgh_bounds);
 
-    getLocation() ;
+    // getLocation() ;
 
       </script>
 
