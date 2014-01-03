@@ -80,21 +80,32 @@ function onLocationUpdate()
   Android.showToast("JS:onLocationUpdate no param") ;
 }
 
-function onLocationUpdateP(latlon)
+function onLocationUpdateP(latlonStr)
 {
 
 Android.showToast("JS:onLocationUpdate with param: " + latlon);
-
+var latlon = JSON.parse(latlonStr)
 
 	var locationupdate = document.getElementById("locationupdate") ;
 
- locationupdate.value = latlon ;    
 
-  // locationupdate.value = latlon.lat + ",  " + latlon.lon ;     
+  locationupdate.value = latlon.lat + ",  " + latlon.lon ;     
+
+var coords = convertBNG(new OpenLayers.LonLat(latlon.lon, latlon.lat)) ;
+
+         Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
+        
+        var lonlat = new OpenLayers.LonLat(327956, 672591) ;
+ 	   lonlat.lon = coords[1] ;
+	   lonlat.lat = coords[0] ;
+       
+      
+        map.panTo(lonlat,10) ;
+        map.setCenter(lonlat, 10) ;
 
 
-	// convertBNG(latlon) ;
-     
+
+	     
  
 }
 
