@@ -202,7 +202,7 @@ public boolean onOptionsItemSelected(MenuItem item) {
 public void getLocation()
 {
 
-Toast.makeText(this,"Android.getLocation called",Toast.LENGTH_SHORT).show();
+// Toast.makeText(this,"Android.getLocation called",Toast.LENGTH_SHORT).show();
 webview.loadUrl("javascript:getLocation();");
 
 }
@@ -242,7 +242,7 @@ webview.loadUrl("javascript:getLocation();");
     @Override
     public void onLocationChanged(Location location) {
 
- Toast.makeText(this,"Android.onLocationChanged",Toast.LENGTH_SHORT).show();
+ // Toast.makeText(this,"Android.onLocationChanged",Toast.LENGTH_SHORT).show();
 
 // webview.loadUrl("javascript:onLocationUpdate();");
 
@@ -282,7 +282,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
     @Override
     public void onConnected(Bundle dataBundle)
     {
-	    Toast.makeText(this, "On Connected: " + mUpdatesRequested,Toast.LENGTH_SHORT).show();
+//	    Toast.makeText(this, "On Connected: " + mUpdatesRequested,Toast.LENGTH_SHORT).show();
        if(mUpdatesRequested)
       {
         startPeriodicUpdates() ;
@@ -292,7 +292,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
     @Override
     public void onDisconnected()
     {
-	Toast.makeText(this, "On Disconnected",Toast.LENGTH_SHORT).show();
+	// Toast.makeText(this, "On Disconnected",Toast.LENGTH_SHORT).show();
 
 
     }

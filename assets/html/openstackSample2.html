@@ -67,8 +67,6 @@ function convertBNG(latlon)
 {
      var natgrid =  new Edina.EPSG_27700() ;
 var coords = natgrid.toLocalSystem( latlon.lat, latlon.lon );
-     // latlon.lat =  coords[0] ;
-     // latlon.lon = coords[1] ;
 	 return coords ;
 
 }
@@ -80,28 +78,47 @@ function onLocationUpdate()
   Android.showToast("JS:onLocationUpdate no param") ;
 }
 
+var positionMarker = null ;
+var icon = null;
+
 function onLocationUpdateP(latlonStr)
 {
 
-Android.showToast("JS:onLocationUpdate with param: " + latlon);
-var latlon = JSON.parse(latlonStr)
+	// Android.showToast("JS:onLocationUpdate with param: " + latlon);
+
+	var latlon = JSON.parse(latlonStr)
 
 	var locationupdate = document.getElementById("locationupdate") ;
 
 
-  locationupdate.value = latlon.lat + ",  " + latlon.lon ;     
+  	locationupdate.value = latlon.lat + ",  " + latlon.lon ;     
 
-var coords = convertBNG(new OpenLayers.LonLat(latlon.lon, latlon.lat)) ;
+	var coords = convertBNG(new OpenLayers.LonLat(latlon.lon, latlon.lat)) ;
 
-         Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
+        // Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
         
         var lonlat = new OpenLayers.LonLat(327956, 672591) ;
- 	   lonlat.lon = coords[1] ;
-	   lonlat.lat = coords[0] ;
-       
+ 	lonlat.lon = coords[1] ;
+	lonlat.lat = coords[0] ;
       
-        map.panTo(lonlat,10) ;
-        map.setCenter(lonlat, 10) ;
+        if(positionMarker === null)
+	{
+		var size = new OpenLayers.Size(25,25);
+        	var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+        	icon = new OpenLayers.Icon('../img/bluedot.png',size,offset);
+        	positionMarker = new OpenLayers.Marker(lonlat,icon.clone() ) ;
+		markers.addMarker(positionMarker) ;
+	        map.panTo(lonlat,10) ;
+         	map.setCenter(lonlat, 10) ;
+	}
+	else
+	{
+      		markers.removeMarker(positionMarker) ;
+        	positionMarker = new OpenLayers.Marker(lonlat,icon.clone() ) ;
+                markers.addMarker(positionMarker) ;
+	
+	}	
+	
 
 
 
@@ -117,24 +134,23 @@ function getLocation() {
        var latlon = {"lat":55.9 , "lon":-3.4 } ;
         try
 		{
-             Android.showToast("calling getLocation() from JS") ;
+          //   Android.showToast("calling getLocation() from JS") ;
         	  latlon = JSON.parse(Android.getLocation());
                 
    	   	}
 		catch(e)
            { 
-            // Portobello 55.9527° N, 3.1143° W
+            // default location for testing Portobello 55.9527° N, 3.1143° W
 
              latlon = {"lat":55.9527 , "lon":-3.1143 } ;
-		    Android.showToast("Using default location") ;  
         	
 
            }        
          var coords = convertBNG(new OpenLayers.LonLat(latlon.lon, latlon.lat)) ;
 
-         Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
+         // Android.showToast("BNG lat:" + latlon.lat  + " BNG lon:" + latlon.lon) ;  
         
-        var lonlat = new OpenLayers.LonLat(327956, 672591) ;
+           var lonlat = new OpenLayers.LonLat(327956, 672591) ; 
  	   lonlat.lon = coords[1] ;
 	   lonlat.lat = coords[0] ;
        
@@ -246,12 +262,15 @@ function getLocation() {
 
  var fieldtripgb_stack = new MapWithLocalStorage(  { layerName:"fieldtripgb", isBaseLayer:true, serviceVersion:"1.0.0", name:"tms" , url:"http://fieldtripgb.edina.ac.uk/", type: "png"}); 
 
- map.addLayers([fieldtripgb_stack]);
+ 
+ var markers = new OpenLayers.Layer.Markers( "Markers" );
+  
+ 
+ map.addLayers([fieldtripgb_stack, markers]);
 
  var edinburgh_bounds = new OpenLayers.Bounds (324472,673054,326048,673881);
     map.zoomToExtent(edinburgh_bounds);
 
-    // getLocation() ;
 
       </script>
 

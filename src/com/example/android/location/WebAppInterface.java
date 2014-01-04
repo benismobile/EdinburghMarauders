@@ -50,7 +50,7 @@ mLocationClient = new LocationClient(mContext, this, this);
 @JavascriptInterface
  public String getLocation() {
 
-Toast.makeText(mContext,"AndroidWebAppInterface.getlocation called",Toast.LENGTH_SHORT).show();
+// Toast.makeText(mContext,"AndroidWebAppInterface.getlocation called",Toast.LENGTH_SHORT).show();
 
 boolean isConnected = servicesConnected() ;
 
@@ -106,7 +106,7 @@ return "" ;
 @Override
     public void onConnected(Bundle bundle) {
 
-Toast.makeText(mContext, "WebAppInterface On Connected",Toast.LENGTH_SHORT).show();
+// Toast.makeText(mContext, "WebAppInterface On Connected",Toast.LENGTH_SHORT).show();
 
 
 
@@ -114,7 +114,7 @@ Toast.makeText(mContext, "WebAppInterface On Connected",Toast.LENGTH_SHORT).show
 
 @Override
     public void onDisconnected() {
-Toast.makeText(mContext, "WebAppInterface On DisConnected",Toast.LENGTH_SHORT).show();
+// Toast.makeText(mContext, "WebAppInterface On DisConnected",Toast.LENGTH_SHORT).show();
 
     }
 
