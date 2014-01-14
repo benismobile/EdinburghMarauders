@@ -103,8 +103,9 @@ public class ReceiveTransitionsIntentService extends IntentService {
                         getString(R.string.geofence_transition_notification_text));
 
                 broadcastIntent.setAction(GeofenceUtils.ACTION_GEOFENCE_TRANSITION);
+		broadcastIntent.putExtra(GeofenceUtils.EXTRA_GEOFENCE_STATUS, "sending transition broadcast from ReceiveTransions");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent);
-            Log.d(GeofenceUtils.APPTAG, "ReceiveTransitionsIntentService:onHandleEvent noErrors");
+                Log.d(GeofenceUtils.APPTAG, "ReceiveTransitionsIntentService:onHandleEvent broadcast ACTION_GEOFENCE_TRANSITION");
 
 
 

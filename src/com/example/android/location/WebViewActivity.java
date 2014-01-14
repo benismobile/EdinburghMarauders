@@ -160,6 +160,7 @@ implements
 
         // Action for broadcast Intents containing various types of geofencing errors
         mIntentFilter.addAction(GeofenceUtils.ACTION_GEOFENCE_ERROR);
+        mIntentFilter.addAction(GeofenceUtils.ACTION_GEOFENCE_TRANSITION);
 
         // All Location Services sample apps use this category
         mIntentFilter.addCategory(GeofenceUtils.CATEGORY_LOCATION_SERVICES);
@@ -404,9 +405,9 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
          */
         mGeofence2 = new SimpleGeofence(
             "2",
-            55.946332, // Latitude
-            -3.1197349, // Longitude
-            15, // radius
+            55.9494253, // Latitude
+            -3.1197156, // Longitude
+            25, // radius
             // Set the expiration time
             GEOFENCE_EXPIRATION_IN_MILLISECONDS,
             // Detect both entry and exit transitions
@@ -473,6 +474,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
 
             // Check the action code and determine what to do
             String action = intent.getAction();
+            Toast.makeText(context, "GfncSmplRecvr Action:" + action, Toast.LENGTH_LONG).show() ;
 
             // Intent contains information about errors in adding or removing geofences
             if (TextUtils.equals(action, GeofenceUtils.ACTION_GEOFENCE_ERROR)) {
@@ -508,7 +510,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
         private void handleGeofenceStatus(Context context, Intent intent) {
 
 
-		Toast.makeText(context, "GeofenceSampleReceiver:handleGeofenceStatus:" + intent, Toast.LENGTH_LONG).show() ;
+		// Toast.makeText(context, "GeofenceSampleReceiver:handleGeofenceStatus:" + intent, Toast.LENGTH_SHORT).show() ;
 
         }
 
