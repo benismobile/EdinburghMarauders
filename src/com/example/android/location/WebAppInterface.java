@@ -52,37 +52,36 @@ mLocationClient = new LocationClient(mContext, this, this);
 
 // Toast.makeText(mContext,"AndroidWebAppInterface.getlocation called",Toast.LENGTH_SHORT).show();
 
-boolean isConnected = servicesConnected() ;
+	if(servicesConnected()==false) return "" ;
 
 
-if(mLocationClient == null)
-{
+	if(mLocationClient != null && mLocationClient.isConnected() == false)
+	{
+		Toast.makeText(mContext,"AndroidWebAppInterface: mLocationClient is not connected!",Toast.LENGTH_SHORT).show();
+  		mLocationClient.connect() ;
+	
+                if(mLocationClient.isConnected())
+		{
 
-Toast.makeText(mContext,"AndroidWebAppInterface mLocationClient is null",Toast.LENGTH_SHORT).show();
+           		// Get the current location
+            		Location currentLocation = mLocationClient.getLastLocation();
+         		String latlon = LocationUtils.getLatLngJSON(mContext, currentLocation);
+   			return latlon ;
 
-}
+		}
+	} //mLocationClient already connected
+	else
+	{
+            		Location currentLocation = mLocationClient.getLastLocation();
+         		String latlon = LocationUtils.getLatLngJSON(mContext, currentLocation);
+   			return latlon ;
 
-if(mLocationClient.isConnected() == false)
-{
-Toast.makeText(mContext,"AndroidWebAppInterface: mLocationClient is not connected!",Toast.LENGTH_SHORT).show();
-  mLocationClient.connect() ;
-}
-else
-{
-           // Get the current location
-            Location currentLocation = mLocationClient.getLastLocation();
+	}
 
-         String latlon = LocationUtils.getLatLngJSON(mContext, currentLocation);
-
-   return latlon ;
-
-}
-
-return "" ;
+    return "" ;
 
 
-    }
-
+ }
 
 
  private boolean servicesConnected() {

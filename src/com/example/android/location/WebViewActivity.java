@@ -160,6 +160,7 @@ implements
 
         // Action for broadcast Intents containing various types of geofencing errors
         mIntentFilter.addAction(GeofenceUtils.ACTION_GEOFENCE_ERROR);
+        // Action for broadcast Intents containing ENTER and EXIT TRANSITIONS
         mIntentFilter.addAction(GeofenceUtils.ACTION_GEOFENCE_TRANSITION);
 
         // All Location Services sample apps use this category
@@ -251,7 +252,13 @@ implements
       mGeofence1 = mGeofencePrefs.getGeofence("1");
       mGeofence2 = mGeofencePrefs.getGeofence("2");
 
-
+	if(mCurrentGeofences != null && mCurrentGeofences.size() < 1 && mGeofence1 != null && mGeofence2 != null)
+	{
+            Toast.makeText(this, "WebViewActivity OnResume add gfs: " + mCurrentGeofences,Toast.LENGTH_SHORT).show();
+            mCurrentGeofences.add(mGeofence1.toGeofence());
+            mCurrentGeofences.add(mGeofence2.toGeofence());
+	    
+        }
 }
 
 
@@ -338,7 +345,7 @@ webview.loadUrl("javascript:getLocation();");
 
 
      // call javascript method to update location
-  webview.loadUrl("javascript:onLocationUpdateP('" + latlon +"');");
+     webview.loadUrl("javascript:onLocationUpdateP('" + latlon +"');");
 
 
     }
@@ -374,19 +381,11 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
        }
 
 
-
-
-/**
- * 
- * Get the geofence parameters for each geofence and add them to
- * a List. Create the PendingIntent containing an Intent that
- * Location Services sends to this app's broadcast receiver when
- * Location Services detects a geofence transition. Send the List
- * and the PendingIntent to Location Services.
- */
-
-      mRequestType = GeofenceUtils.REQUEST_TYPE.ADD;
-      mGeofence1 = new SimpleGeofence(
+      if(mCurrentGeofences != null && mCurrentGeofences.size() < 1)
+      {
+      	mRequestType = GeofenceUtils.REQUEST_TYPE.ADD;
+       Toast.makeText(this, "WebViewActivity OnConnected: adding gfs"  ,Toast.LENGTH_SHORT).show();
+      	mGeofence1 = new SimpleGeofence(
             "1",
             55.9494252, // Latitude
              -3.1197155,  // Longitude
@@ -394,54 +393,41 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
             // expiration time
             GEOFENCE_EXPIRATION_IN_MILLISECONDS,
             // Only detect entry transitions
-            Geofence.GEOFENCE_TRANSITION_ENTER);
+            Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT);
 
-        // Store this flat version in SharedPreferences
-        mGeofencePrefs.setGeofence("1", mGeofence1);
-
-        /*
-         * Create a version of geofence 2 that is "flattened" into individual fields. This
-         * allows it to be stored in SharedPreferences.
-         */
-        mGeofence2 = new SimpleGeofence(
+          mGeofence2 = new SimpleGeofence(
             "2",
             55.9494253, // Latitude
             -3.1197156, // Longitude
-            25, // radius
+            15, // radius
             // Set the expiration time
             GEOFENCE_EXPIRATION_IN_MILLISECONDS,
             // Detect both entry and exit transitions
             Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT
             );
 
-        // Store this flat version in SharedPreferences
-        mGeofencePrefs.setGeofence("2", mGeofence2);
 
-        /*
-         * Add Geofence objects to a List. toGeofence()
-         * creates a Location Services Geofence object from a
-         * flat object
-         */
-        mCurrentGeofences.add(mGeofence1.toGeofence());
-        mCurrentGeofences.add(mGeofence2.toGeofence());
-
-        // Start the request. Fail if there's already a request in progress
-        try {
-            // Try to add geofences
-            mGeofenceRequester.addGeofences(mCurrentGeofences);
-        } catch (UnsupportedOperationException e) {
-            // Notify user that previous request hasn't finished.
-            Toast.makeText(this, R.string.add_geofences_already_requested_error,
+            mGeofencePrefs.setGeofence("1", mGeofence1);
+            mGeofencePrefs.setGeofence("2", mGeofence2);
+       	    mCurrentGeofences.add(mGeofence1.toGeofence());
+       	    mCurrentGeofences.add(mGeofence2.toGeofence());
+	
+           // Start the request. Fail if there's already a request in progress
+           try {
+               // Try to add geofences
+               mGeofenceRequester.addGeofences(mCurrentGeofences);
+               } catch (UnsupportedOperationException e) {
+                 // Notify user that previous request hasn't finished.
+                 Toast.makeText(this, R.string.add_geofences_already_requested_error,
                         Toast.LENGTH_LONG).show();
-        }
+                 }
       
-
+       }
     }
 
     @Override
     public void onDisconnected()
     {
-	// Toast.makeText(this, "On Disconnected",Toast.LENGTH_SHORT).show();
 
 
     }
@@ -474,7 +460,6 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
 
             // Check the action code and determine what to do
             String action = intent.getAction();
-            Toast.makeText(context, "GfncSmplRecvr Action:" + action, Toast.LENGTH_LONG).show() ;
 
             // Intent contains information about errors in adding or removing geofences
             if (TextUtils.equals(action, GeofenceUtils.ACTION_GEOFENCE_ERROR)) {

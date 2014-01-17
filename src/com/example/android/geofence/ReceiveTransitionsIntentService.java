@@ -15,6 +15,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import java.util.List;
 import com.example.android.location.R ;
+import android.app.Notification ;
 
 /**
  * This class receives geofence transition events from Location Services, in the
@@ -129,13 +130,13 @@ public class ReceiveTransitionsIntentService extends IntentService {
 
         // Create an explicit content Intent that starts the main Activity
         Intent notificationIntent =
-                new Intent(getApplicationContext(),com.example.android.location.MainActivity.class);
+                new Intent(getApplicationContext(),com.example.android.location.WebViewActivity.class);
 
         // Construct a task stack
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
 
         // Adds the main Activity to the task stack as the parent
-        stackBuilder.addParentStack(com.example.android.location.MainActivity.class);
+        stackBuilder.addParentStack(com.example.android.location.WebViewActivity.class);
 
         // Push the content Intent onto the stack
         stackBuilder.addNextIntent(notificationIntent);
@@ -153,7 +154,8 @@ public class ReceiveTransitionsIntentService extends IntentService {
                        getString(R.string.geofence_transition_notification_title,
                                transitionType, ids))
                .setContentText(getString(R.string.geofence_transition_notification_text))
-               .setContentIntent(notificationPendingIntent);
+               .setContentIntent(notificationPendingIntent)
+	       .setDefaults(Notification.DEFAULT_VIBRATE);
 
         // Get an instance of the Notification manager
         NotificationManager mNotificationManager =

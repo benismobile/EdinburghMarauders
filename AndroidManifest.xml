@@ -32,6 +32,10 @@
 <uses-permission android:name="android.permission.ACCESS_GPS" />
 <uses-permission android:name="android.permission.CAMERA" />
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.VIBRATE" />
+
+
+
 <uses-feature android:name="android.hardware.camera" android:required="true" />
 <uses-feature android:name="android.hardware.location" android:required="true" />
 <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
@@ -44,28 +48,22 @@
         android:label="@string/app_name"
         android:description="@string/app_description">
         
-<activity
-            android:name="com.example.android.location.MainActivity"
-            android:label="@string/app_name"
-android:theme="@style/Theme.AppCompat.Light">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-</activity>
 
 <activity android:name="com.example.android.location.WebViewActivity" android:label="@string/MapView" android:theme="@style/Theme.AppCompat.Light">
-<meta-data android:name="android.support.PARENT_ACTIVITY" android:value="com.example.android.location.MainActivity" />
+<intent-filter>
+  <action android:name="android.intent.action.MAIN" />
+  <category android:name="android.intent.category.LAUNCHER" />
+</intent-filter>
 </activity>
 
 <activity android:name="com.example.android.location.ArchitectView"
    android:configChanges="screenSize|orientation"/>
 
-        <service
-            android:name="com.example.android.geofence.ReceiveTransitionsIntentService"
-            android:label="@string/app_name"
-            android:exported="false">
+<service           android:name="com.example.android.geofence.ReceiveTransitionsIntentService"
+android:label="@string/app_name"
+android:exported="false">
 </service>
-    </application>
+
+</application>
 
 </manifest>
