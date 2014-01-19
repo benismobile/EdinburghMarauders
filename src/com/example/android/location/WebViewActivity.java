@@ -44,7 +44,7 @@ import java.util.List;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
-
+import android.text.format.Time ;
 
 
 public class WebViewActivity extends ActionBarActivity
@@ -249,15 +249,44 @@ implements
 
 
       LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, mIntentFilter);
+      Time now = new Time() ;
+      now.setToNow() ;
+      long nowMillis = now.toMillis(false) ;
       mGeofence1 = mGeofencePrefs.getGeofence("1");
       mGeofence2 = mGeofencePrefs.getGeofence("2");
 
-	if(mCurrentGeofences != null && mCurrentGeofences.size() < 1 && mGeofence1 != null && mGeofence2 != null)
+      // the list of current geofences is not empty
+	if(mCurrentGeofences != null && mCurrentGeofences.size() > 0 && mGeofence1 != null && mGeofence2 != null)
+        {
+            // check if any geofences stored in SharedPrefs have expired - if so remove ALL geofences 
+	    // from SharedPrefs - they will all get created again in onConnected callback method
+	   
+	   if(mGeofence1.getExpirationTime() < nowMillis || mGeofence2.getExpirationTime() < nowMillis)
+	   {
+	     mGeofencePrefs.clearGeofence("1") ;
+	     mGeofencePrefs.clearGeofence("2") ;
+	     mCurrentGeofences.remove("1") ;
+	     mCurrentGeofences.remove("2") ;
+	   }
+	     
+
+        }
+	// the list of current geofences is empty but we found some in shared prefs
+	if(mCurrentGeofences != null && mCurrentGeofences.size() == 0 && mGeofence1 != null && mGeofence2 != null)
 	{
-            Toast.makeText(this, "WebViewActivity OnResume add gfs: " + mCurrentGeofences,Toast.LENGTH_SHORT).show();
-            mCurrentGeofences.add(mGeofence1.toGeofence());
-            mCurrentGeofences.add(mGeofence2.toGeofence());
-	    
+	   
+	   // check expiration time 
+	   if(mGeofence1.getExpirationTime() < nowMillis || mGeofence2.getExpirationTime() < nowMillis)
+	   {
+	      mGeofencePrefs.clearGeofence("1") ;
+	      mGeofencePrefs.clearGeofence("2") ;
+	   }
+	   else
+	   {
+              Toast.makeText(this, "WebViewActivity OnResume add gfs: " + mCurrentGeofences,Toast.LENGTH_SHORT).show();
+              mCurrentGeofences.add(mGeofence1.toGeofence());
+              mCurrentGeofences.add(mGeofence2.toGeofence());
+	   }
         }
 }
 
@@ -283,6 +312,8 @@ public boolean onOptionsItemSelected(MenuItem item) {
         case R.id.get_location:
             getLocation();
             return true;
+	case R.id.framemarkers:
+	    framemarkers();
         default:
             return super.onOptionsItemSelected(item);
     }
@@ -299,7 +330,15 @@ webview.loadUrl("javascript:getLocation();");
 
 }
 
+public void framemarkers()
+{
 
+ Toast.makeText(this,"Framemarkers called",Toast.LENGTH_SHORT).show();
+  Intent intent = new Intent(this, com.example.android.framemarkers.FrameMarkers.class);
+
+  startActivity(intent);
+
+}
 
   private void startUpdates() {
         mUpdatesRequested = true;
@@ -381,7 +420,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
        }
 
 
-      if(mCurrentGeofences != null && mCurrentGeofences.size() < 1)
+      if(mCurrentGeofences != null && mCurrentGeofences.size() == 0)
       {
       	mRequestType = GeofenceUtils.REQUEST_TYPE.ADD;
        Toast.makeText(this, "WebViewActivity OnConnected: adding gfs"  ,Toast.LENGTH_SHORT).show();
@@ -403,8 +442,8 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
             // Set the expiration time
             GEOFENCE_EXPIRATION_IN_MILLISECONDS,
             // Detect both entry and exit transitions
-            Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT
-            );
+            Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT);
+ 
 
 
             mGeofencePrefs.setGeofence("1", mGeofence1);

@@ -82,6 +82,8 @@ public final class GeofenceUtils {
 
     public static final String KEY_EXPIRATION_DURATION =
             "com.example.android.geofence.KEY_EXPIRATION_DURATION";
+    public static final String KEY_EXPIRATION_TIME =
+            "com.example.android.geofence.KEY_EXPIRATION_TIME";
 
     public static final String KEY_TRANSITION_TYPE =
             "com.example.android.geofence.KEY_TRANSITION_TYPE";

@@ -17,7 +17,7 @@
 package com.example.android.geofence;
 
 import com.google.android.gms.location.Geofence;
-
+import android.text.format.Time ;
 /**
  * A single Geofence object, defined by its center (latitude and longitude position) and radius.
  */
@@ -29,6 +29,7 @@ public class SimpleGeofence {
     private final float mRadius;
     private long mExpirationDuration;
     private int mTransitionType;
+    private long mExpirationTime ;
 
     /**
      * @param geofenceId The Geofence's request ID
@@ -63,6 +64,11 @@ public class SimpleGeofence {
 
         // Transition type
         this.mTransitionType = transition;
+	Time now = new Time() ;
+	now.setToNow() ;
+        this.mExpirationTime = now.toMillis(false) + mExpirationDuration ;
+
+
     }
     // Instance field getters
 
@@ -105,7 +111,10 @@ public class SimpleGeofence {
     public long getExpirationDuration() {
         return mExpirationDuration;
     }
+    public long getExpirationTime() {
+        return mExpirationTime ;
 
+    }
     /**
      * Get the geofence transition type
      * @return Transition type (see Geofence)

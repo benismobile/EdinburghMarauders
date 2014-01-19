@@ -86,7 +86,8 @@ public class ReceiveTransitionsIntentService extends IntentService {
                 // Post a notification
                 List<Geofence> geofences = LocationClient.getTriggeringGeofences(intent);
                 String[] geofenceIds = new String[geofences.size()];
-                for (int index = 0; index < geofences.size() ; index++) {
+                for (int index = 0; index < geofences.size() ; index++) 
+		{
                     geofenceIds[index] = geofences.get(index).getRequestId();
                 }
                 String ids = TextUtils.join(GeofenceUtils.GEOFENCE_ID_DELIMITER,geofenceIds);
@@ -115,7 +116,7 @@ public class ReceiveTransitionsIntentService extends IntentService {
             } else {
                 // Always log as an error
                 Log.e(GeofenceUtils.APPTAG,
-                        getString(R.string.geofence_transition_invalid_type, transition));
+                        getString(R.string.geofence_transition_invalid_type, transition) + getTransitionString(transition));
             }
         }
     }

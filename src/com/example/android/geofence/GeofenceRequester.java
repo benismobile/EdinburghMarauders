@@ -181,9 +181,14 @@ public class GeofenceRequester
         if (LocationStatusCodes.SUCCESS == statusCode) {
 
             // Create a message containing all the geofence IDs added.
-            msg = mActivity.getString(R.string.add_geofences_result_success,
+            if(geofenceRequestIds != null || geofenceRequestIds.length > 0)
+	    {   msg = mActivity.getString(R.string.add_geofences_result_success,
                     Arrays.toString(geofenceRequestIds));
-
+	    }
+	    else
+	    {
+	      msg = "geofenceRequestIds added are empty" ;  
+	    }
             // In debug mode, log the result
             Log.d(GeofenceUtils.APPTAG, msg);
 

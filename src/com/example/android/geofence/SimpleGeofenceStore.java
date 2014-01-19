@@ -84,6 +84,9 @@ public class SimpleGeofenceStore {
                 getGeofenceFieldKey(id, GeofenceUtils.KEY_EXPIRATION_DURATION),
                 GeofenceUtils.INVALID_LONG_VALUE);
 
+        long expirationTime = mPrefs.getLong(
+                getGeofenceFieldKey(id, GeofenceUtils.KEY_EXPIRATION_TIME),
+                GeofenceUtils.INVALID_LONG_VALUE);
         /*
          * Get the transition type for the geofence identified by
          * id, or GeofenceUtils.INVALID_VALUE if it doesn't exist
@@ -140,6 +143,10 @@ public class SimpleGeofenceStore {
         editor.putLong(
                 getGeofenceFieldKey(id, GeofenceUtils.KEY_EXPIRATION_DURATION),
                 geofence.getExpirationDuration());
+        
+	editor.putLong(
+                getGeofenceFieldKey(id, GeofenceUtils.KEY_EXPIRATION_TIME),
+                geofence.getExpirationTime());
 
         editor.putInt(
                 getGeofenceFieldKey(id, GeofenceUtils.KEY_TRANSITION_TYPE),
@@ -157,6 +164,7 @@ public class SimpleGeofenceStore {
         editor.remove(getGeofenceFieldKey(id, GeofenceUtils.KEY_LONGITUDE));
         editor.remove(getGeofenceFieldKey(id, GeofenceUtils.KEY_RADIUS));
         editor.remove(getGeofenceFieldKey(id, GeofenceUtils.KEY_EXPIRATION_DURATION));
+        editor.remove(getGeofenceFieldKey(id, GeofenceUtils.KEY_EXPIRATION_TIME));
         editor.remove(getGeofenceFieldKey(id, GeofenceUtils.KEY_TRANSITION_TYPE));
         editor.commit();
     }
