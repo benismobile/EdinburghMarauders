@@ -66,7 +66,7 @@ implements
    // Persistent storage for geofences
    private SimpleGeofenceStore mGeofencePrefs;
 
-   private static final long GEOFENCE_EXPIRATION_IN_HOURS = 12;
+   private static final long GEOFENCE_EXPIRATION_IN_HOURS = 1;
    private static final long GEOFENCE_EXPIRATION_IN_MILLISECONDS = GEOFENCE_EXPIRATION_IN_HOURS * DateUtils.HOUR_IN_MILLIS;
 
    // Store the current request
@@ -261,12 +261,14 @@ implements
             // check if any geofences stored in SharedPrefs have expired - if so remove ALL geofences 
 	    // from SharedPrefs - they will all get created again in onConnected callback method
 	   
+	   Log.d(GeofenceUtils.APPTAG, "onResume: geofence list not empty mGeofence1  expiretime: " + mGeofence1.getExpirationTime() + " nowMillis:" + nowMillis + " expired: " + (mGeofence1.getExpirationTime() < nowMillis)) ;
+
 	   if(mGeofence1.getExpirationTime() < nowMillis || mGeofence2.getExpirationTime() < nowMillis)
 	   {
+	     Log.d(GeofenceUtils.APPTAG, "Getting rid of expired geofences from prefs") ;
 	     mGeofencePrefs.clearGeofence("1") ;
 	     mGeofencePrefs.clearGeofence("2") ;
-	     mCurrentGeofences.remove("1") ;
-	     mCurrentGeofences.remove("2") ;
+	     mCurrentGeofences.clear() ;
 	   }
 	     
 
@@ -274,6 +276,7 @@ implements
 	// the list of current geofences is empty but we found some in shared prefs
 	if(mCurrentGeofences != null && mCurrentGeofences.size() == 0 && mGeofence1 != null && mGeofence2 != null)
 	{
+	   Log.d(GeofenceUtils.APPTAG, "onResume: geofence list empty mGeofence1  expiretime: " + mGeofence1.getExpirationTime() + " nowMillis:" + nowMillis + " expired: " + (mGeofence1.getExpirationTime() < nowMillis)) ;
 	   
 	   // check expiration time 
 	   if(mGeofence1.getExpirationTime() < nowMillis || mGeofence2.getExpirationTime() < nowMillis)
@@ -283,7 +286,7 @@ implements
 	   }
 	   else
 	   {
-              Toast.makeText(this, "WebViewActivity OnResume add gfs: " + mCurrentGeofences,Toast.LENGTH_SHORT).show();
+              Log.d(GeofenceUtils.APPTAG, "Existing geofences not expired but list empty so add gfs: ");
               mCurrentGeofences.add(mGeofence1.toGeofence());
               mCurrentGeofences.add(mGeofence2.toGeofence());
 	   }
@@ -419,10 +422,11 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
           startPeriodicUpdates() ;
        }
 
-
+      Log.d(GeofenceUtils.APPTAG, "WebViewActivity:onConnected " + mCurrentGeofences ) ;
       if(mCurrentGeofences != null && mCurrentGeofences.size() == 0)
       {
       	mRequestType = GeofenceUtils.REQUEST_TYPE.ADD;
+	Log.d(GeofenceUtils.APPTAG, "WebViewActivity:onConnected: adding gfs") ;
        Toast.makeText(this, "WebViewActivity OnConnected: adding gfs"  ,Toast.LENGTH_SHORT).show();
       	mGeofence1 = new SimpleGeofence(
             "1",
@@ -430,7 +434,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
              -3.1197155,  // Longitude
             25, // radius
             // expiration time
-            GEOFENCE_EXPIRATION_IN_MILLISECONDS,
+            60 * 1000,
             // Only detect entry transitions
             Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT);
 
@@ -440,12 +444,12 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
             -3.1197156, // Longitude
             15, // radius
             // Set the expiration time
-            GEOFENCE_EXPIRATION_IN_MILLISECONDS,
+            60 * 1000,
             // Detect both entry and exit transitions
             Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT);
  
-
-
+            
+            Log.d(GeofenceUtils.APPTAG, "adding 2 geofences to prefs and geofence list") ;
             mGeofencePrefs.setGeofence("1", mGeofence1);
             mGeofencePrefs.setGeofence("2", mGeofence2);
        	    mCurrentGeofences.add(mGeofence1.toGeofence());
@@ -455,6 +459,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
            try {
                // Try to add geofences
                mGeofenceRequester.addGeofences(mCurrentGeofences);
+	       Log.d(GeofenceUtils.APPTAG, "requesting adding of geofence list items") ;
                } catch (UnsupportedOperationException e) {
                  // Notify user that previous request hasn't finished.
                  Toast.makeText(this, R.string.add_geofences_already_requested_error,
@@ -535,6 +540,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
 
 
 		// Toast.makeText(context, "GeofenceSampleReceiver:handleGeofenceStatus:" + intent, Toast.LENGTH_SHORT).show() ;
+               Log.d(GeofenceUtils.APPTAG, "GeofenceSampleReceiver:handleGeofenceStatus: " + intent );
 
         }
 
@@ -551,7 +557,7 @@ Toast.makeText(this, "Google Play Services NotAvailable",  Toast.LENGTH_SHORT).s
              * user that a transition has occurred.
              */
 
-               Toast.makeText(context, "GeofenceSampleReceiver:handleGeofenceTransition: " + intent, Toast.LENGTH_LONG).show() ;
+               Log.d(GeofenceUtils.APPTAG, "GeofenceSampleReceiver:handleGeofenceTransition: " + intent );
 
         }
 

@@ -86,7 +86,7 @@ public class SimpleGeofenceStore {
 
         long expirationTime = mPrefs.getLong(
                 getGeofenceFieldKey(id, GeofenceUtils.KEY_EXPIRATION_TIME),
-                GeofenceUtils.INVALID_LONG_VALUE);
+                0);
         /*
          * Get the transition type for the geofence identified by
          * id, or GeofenceUtils.INVALID_VALUE if it doesn't exist
@@ -104,7 +104,9 @@ public class SimpleGeofenceStore {
             transitionType != GeofenceUtils.INVALID_INT_VALUE) {
 
             // Return a true Geofence object
-            return new SimpleGeofence(id, lat, lng, radius, expirationDuration, transitionType);
+            // TODO add expire time into constructor
+	    return new SimpleGeofence(id, lat, lng, radius, expirationDuration, expirationTime, transitionType);
+	    
 
         // Otherwise, return null.
         } else {

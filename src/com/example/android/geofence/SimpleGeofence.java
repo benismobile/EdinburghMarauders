@@ -64,14 +64,43 @@ public class SimpleGeofence {
 
         // Transition type
         this.mTransitionType = transition;
-	Time now = new Time() ;
+        // derive expiration time
+        Time now = new Time() ;
 	now.setToNow() ;
         this.mExpirationTime = now.toMillis(false) + mExpirationDuration ;
 
 
     }
     // Instance field getters
+    public SimpleGeofence(
+            String geofenceId,
+            double latitude,
+            double longitude,
+            float radius,
+            long expiration,
+	    long expirationTime,
+            int transition) {
+        // Set the instance fields from the constructor
 
+        // An identifier for the geofence
+        this.mId = geofenceId;
+
+        // Center of the geofence
+        this.mLatitude = latitude;
+        this.mLongitude = longitude;
+
+        // Radius of the geofence, in meters
+        this.mRadius = radius;
+
+        // Expiration time in milliseconds
+        this.mExpirationDuration = expiration;
+        // Transition type
+        this.mTransitionType = transition;
+	// use persisted expiration time
+	this.mExpirationTime = expirationTime ;
+   }  
+
+    // Instance field getters
     /**
      * Get the geofence ID
      * @return A SimpleGeofence ID
